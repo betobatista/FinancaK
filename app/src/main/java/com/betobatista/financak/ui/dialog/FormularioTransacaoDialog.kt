@@ -18,29 +18,36 @@ import kotlinx.android.synthetic.main.form_transacao.view.*
 import java.math.BigDecimal
 import java.util.*
 
-open class FormularioTransacaoDialog(private val context: Context, private val viewGroup: ViewGroup) {
+abstract class FormularioTransacaoDialog(
+    private val context: Context,
+    private val viewGroup: ViewGroup
+) {
+
     private val viewCriada = criaLayout()
-    private val valor = viewCriada.form_transacao_valor
-    private val categoria = viewCriada.form_transacao_categoria
-    private val data = viewCriada.form_transacao_data
-    fun chama(tipo: Tipo, transacaoDelegate: TransacaoDelegate) {
+    protected val campoValor = viewCriada.form_transacao_valor
+    protected val campoCategoria = viewCriada.form_transacao_categoria
+    protected val campoData = viewCriada.form_transacao_data
+
+    abstract protected val tituloBotaoPositivo: String
+
+    fun chama(tipo: Tipo, delegate: (transacao: Transacoes) -> Unit) {
         configuraCampoData()
         configuraCampoCategoria(tipo)
-        configuraFormulario(tipo, transacaoDelegate)
+        configuraFormulario(tipo, delegate)
     }
 
-    private fun configuraFormulario(tipo: Tipo, transacaoDelegate: TransacaoDelegate) {
+    private fun configuraFormulario(tipo: Tipo, delegate: (transacao: Transacoes) -> Unit) {
         val titulo = tituloPor(tipo)
 
         AlertDialog.Builder(context)
             .setTitle(titulo)
             .setView(viewCriada)
             .setPositiveButton(
-                "Adicionar"
+                tituloBotaoPositivo
             ) { _, _ ->
-                val valorEmTexto = valor.text.toString()
-                val dataEmTexto = data.text.toString()
-                val categoriaEmTexto = categoria.selectedItem.toString()
+                val valorEmTexto = campoValor.text.toString()
+                val dataEmTexto = campoData.text.toString()
+                val categoriaEmTexto = campoCategoria.selectedItem.toString()
 
                 val valor = converteCampoValor(valorEmTexto)
                 val data = dataEmTexto.coverteParaCalendar()
@@ -51,18 +58,13 @@ open class FormularioTransacaoDialog(private val context: Context, private val v
                     data = data,
                     categoria = categoriaEmTexto
                 )
-                transacaoDelegate.delegate(transacaoCriada)
+                delegate(transacaoCriada)
             }
             .setNegativeButton("Cancelar", null)
             .show()
     }
 
-    private fun tituloPor(tipo: Tipo): Int {
-        if (tipo == Tipo.RECEITA) {
-            return R.string.adiciona_receita
-        }
-        return R.string.adiciona_despesa
-    }
+    abstract protected fun tituloPor(tipo: Tipo): Int
 
     private fun converteCampoValor(valorEmTexto: String): BigDecimal {
         return try {
@@ -85,10 +87,10 @@ open class FormularioTransacaoDialog(private val context: Context, private val v
             categorias,
             android.R.layout.simple_spinner_dropdown_item
         )
-        categoria.adapter = adapter
+        campoCategoria.adapter = adapter
     }
 
-    private fun categoriaPor(tipo: Tipo): Int {
+    protected fun categoriaPor(tipo: Tipo): Int {
         if (tipo == Tipo.RECEITA) {
             return R.array.categorias_de_receita
         }
@@ -101,14 +103,14 @@ open class FormularioTransacaoDialog(private val context: Context, private val v
         val mes = hoje.get(Calendar.MONTH)
         val dia = hoje.get(Calendar.DAY_OF_MONTH)
 
-        data.setText(hoje.formataParaBrasileiro())
-        data.setOnClickListener {
+        campoData.setText(hoje.formataParaBrasileiro())
+        campoData.setOnClickListener {
             DatePickerDialog(
                 context,
                 { _, ano, mes, dia ->
                     val dataSelecionada = Calendar.getInstance()
                     dataSelecionada.set(ano, mes, dia)
-                    data.setText(dataSelecionada.formataParaBrasileiro())
+                    campoData.setText(dataSelecionada.formataParaBrasileiro())
                 }, ano, mes, dia
             ).show()
         }
