@@ -1,5 +1,6 @@
 package com.betobatista.financak.ui.dialog
 
+import android.app.AlertDialog
 import android.app.DatePickerDialog
 import android.content.Context
 import android.view.LayoutInflater
@@ -7,7 +8,6 @@ import android.view.View
 import android.view.ViewGroup
 import android.widget.ArrayAdapter
 import android.widget.Toast
-import androidx.appcompat.app.AlertDialog
 import com.betobatista.financak.R
 import com.betobatista.financak.delegate.TransacaoDelegate
 import com.betobatista.financak.extension.coverteParaCalendar
@@ -18,29 +18,15 @@ import kotlinx.android.synthetic.main.form_transacao.view.*
 import java.math.BigDecimal
 import java.util.*
 
-class AlteraTransacaoDialog(
-    private val viewGroup: ViewGroup,
-    private val context: Context
-) {
-
+open class FormularioTransacaoDialog(private val context: Context, private val viewGroup: ViewGroup) {
     private val viewCriada = criaLayout()
-
-    private val campoValor = viewCriada.form_transacao_valor
-    private val campoCategoria = viewCriada.form_transacao_categoria
-    private val camporData = viewCriada.form_transacao_data
-
-    fun chama(transacoes: Transacoes, transacaoDelegate: TransacaoDelegate) {
-        val tipo = transacoes.tipo
-
+    private val valor = viewCriada.form_transacao_valor
+    private val categoria = viewCriada.form_transacao_categoria
+    private val data = viewCriada.form_transacao_data
+    fun chama(tipo: Tipo, transacaoDelegate: TransacaoDelegate) {
         configuraCampoData()
         configuraCampoCategoria(tipo)
         configuraFormulario(tipo, transacaoDelegate)
-
-        campoValor.setText(transacoes.valor.toString())
-        camporData.setText(transacoes.data.formataParaBrasileiro())
-        val categoriasRetornadas = context.resources.getStringArray(categoriaPor(tipo))
-        val posicaoCategoria = categoriasRetornadas.indexOf(transacoes.categoria)
-        campoCategoria.setSelection(posicaoCategoria, true)
     }
 
     private fun configuraFormulario(tipo: Tipo, transacaoDelegate: TransacaoDelegate) {
@@ -50,11 +36,11 @@ class AlteraTransacaoDialog(
             .setTitle(titulo)
             .setView(viewCriada)
             .setPositiveButton(
-                "Alterar"
+                "Adicionar"
             ) { _, _ ->
-                val valorEmTexto = campoValor.text.toString()
-                val dataEmTexto = camporData.text.toString()
-                val categoriaEmTexto = campoCategoria.selectedItem.toString()
+                val valorEmTexto = valor.text.toString()
+                val dataEmTexto = data.text.toString()
+                val categoriaEmTexto = categoria.selectedItem.toString()
 
                 val valor = converteCampoValor(valorEmTexto)
                 val data = dataEmTexto.coverteParaCalendar()
@@ -73,9 +59,9 @@ class AlteraTransacaoDialog(
 
     private fun tituloPor(tipo: Tipo): Int {
         if (tipo == Tipo.RECEITA) {
-            return R.string.altera_receita
+            return R.string.adiciona_receita
         }
-        return R.string.altera_despesa
+        return R.string.adiciona_despesa
     }
 
     private fun converteCampoValor(valorEmTexto: String): BigDecimal {
@@ -99,7 +85,7 @@ class AlteraTransacaoDialog(
             categorias,
             android.R.layout.simple_spinner_dropdown_item
         )
-        campoCategoria.adapter = adapter
+        categoria.adapter = adapter
     }
 
     private fun categoriaPor(tipo: Tipo): Int {
@@ -115,14 +101,14 @@ class AlteraTransacaoDialog(
         val mes = hoje.get(Calendar.MONTH)
         val dia = hoje.get(Calendar.DAY_OF_MONTH)
 
-        camporData.setText(hoje.formataParaBrasileiro())
-        camporData.setOnClickListener {
+        data.setText(hoje.formataParaBrasileiro())
+        data.setOnClickListener {
             DatePickerDialog(
                 context,
                 { _, ano, mes, dia ->
                     val dataSelecionada = Calendar.getInstance()
                     dataSelecionada.set(ano, mes, dia)
-                    camporData.setText(dataSelecionada.formataParaBrasileiro())
+                    data.setText(dataSelecionada.formataParaBrasileiro())
                 }, ano, mes, dia
             ).show()
         }
