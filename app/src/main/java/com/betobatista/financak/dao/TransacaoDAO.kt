@@ -4,17 +4,20 @@ import com.betobatista.financak.model.Transacoes
 
 class TransacaoDAO {
 
-    val transacoes: MutableList<Transacoes> = mutableListOf()
+    val transacoes: List<Transacoes> = Companion.transacoes
+    companion object{
+        private val transacoes: MutableList<Transacoes> = mutableListOf()
+    }
 
     fun adiciona(transacao: Transacoes){
-        transacoes.add(transacao)
+        Companion.transacoes.add(transacao)
     }
 
     fun altera(transacao: Transacoes, posicao: Int){
-        transacoes[posicao] = transacao
+        Companion.transacoes[posicao] = transacao
     }
 
     fun remove(posicao: Int){
-        transacoes.removeAt(posicao)
+        Companion.transacoes.removeAt(posicao)
     }
 }
